@@ -66,7 +66,7 @@ in the dataset directory (for details, see the Datasets section).
 ```
 $ cd dataset
 $ ls
-QM9under14atoms_atomizationenergy_eV.zip
+QM9under14atoms_atomizationenergy_eV
 QM9over15atoms_atomizationenergy_eV.zip  # Only test.txt.
 QM9full_atomizationenergy_eV.zip
 QM9full_homolumo_eV.zip
