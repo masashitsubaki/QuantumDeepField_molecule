@@ -66,7 +66,7 @@ in the dataset directory (for details, see the Datasets section).
 ```
 $ cd dataset
 $ ls
-QM9under14atoms_atomizationenergy_eV
+QM9under14atoms_atomizationenergy_eV.zip
 QM9over15atoms_atomizationenergy_eV.zip  # Only test.txt.
 QM9full_atomizationenergy_eV.zip
 QM9full_homolumo_eV.zip
@@ -99,6 +99,13 @@ After running each command, your terminal is displayed as follows.
 <div align='center'>
 <p><img src='figure/terminal_train.jpeg' width='1000'/></p>
 </div>
+
+After training a QDF model,
+we can describe the learning curve from the result file as follows.
+<div align='center'>
+<p><img src='figure/learning.jpeg' width='500'/></p>
+</div>
+Using the above hyperparameters, you can completely reproduce this result.
 
 
 
