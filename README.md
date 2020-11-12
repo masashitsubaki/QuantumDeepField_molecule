@@ -195,7 +195,7 @@ Therefore, if your dataset contains other atoms (e.g., S and Cl)
 that do not appear in the QM9 dataset, you receive the following warning.
 
 <div align='center'>
-<p><img src='figure/warning.jpeg' width='750'/></p>
+<p><img src='figure/warning.jpeg' width='500'/></p>
 </div>
 
 If you would like to predict the molecules including S and Cl atoms,
