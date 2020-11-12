@@ -102,7 +102,7 @@ After running each command, your terminal is displayed as follows.
 After training a QDF model,
 we can describe the learning curve from the result file as follows.
 <div align='center'>
-<p><img src='figure/learning.jpeg' width='500'/></p>
+<p><img src='figure/learning.jpeg' width='750'/></p>
 </div>
 Using the above hyperparameters, you can completely reproduce this result.
 
@@ -195,7 +195,7 @@ Therefore, if your dataset contains other atoms (e.g., S and Cl)
 that do not appear in the QM9 dataset, you receive the following warning.
 
 <div align='center'>
-<p><img src='figure/warning.jpeg' width='500'/></p>
+<p><img src='figure/warning.jpeg' width='750'/></p>
 </div>
 
 If you would like to predict the molecules including S and Cl atoms,
@@ -225,7 +225,7 @@ In addition to property prediction, you will be able to generate
 the electron density map of molecules by a command in the future.
 
 <div align='center'>
-<p><img src='figure/densitymap.jpeg' width='1000'/></p>
+<p><img src='figure/densitymap.jpeg' width='500'/></p>
 </div>
 
 
