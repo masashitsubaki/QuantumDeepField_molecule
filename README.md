@@ -225,7 +225,7 @@ In addition to property prediction, you will be able to generate
 the electron density map of molecules by a command in the future.
 
 <div align='center'>
-<p><img src='figure/densitymap.jpeg' width='500'/></p>
+<p><img src='figure/densitymap.jpeg' width='1000'/></p>
 </div>
 
 
