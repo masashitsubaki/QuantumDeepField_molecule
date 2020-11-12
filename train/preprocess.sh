@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
 # Dataset.
-# dataset=QM9under14atoms_atomizationenergy_eV
-dataset=QM9full_atomizationenergy_eV
+dataset=QM9under14atoms_atomizationenergy_eV
+# dataset=QM9full_atomizationenergy_eV
 # dataset=QM9full_homolumo_eV  # Two properties (homo and lumo).
 # dataset=yourdataset_property_unit
 

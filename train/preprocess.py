@@ -88,6 +88,7 @@ def create_dataset(dir_dataset, filename, basis_set,
     """Load a dataset."""
     with open(dir_dataset + filename + '.txt', 'r') as f:
         dataset = f.read().strip().split('\n\n')
+    # dataset = dataset[:1000]
 
     N = len(dataset)
     percent = 10
