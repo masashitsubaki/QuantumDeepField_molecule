@@ -28,6 +28,7 @@ if __name__ == "__main__":
     parser.add_argument('step_size', type=int)
     parser.add_argument('iteration', type=int)
     parser.add_argument('setting')
+    parser.add_argument('num_workers', type=int)
     parser.add_argument('dataset_predict')
     args = parser.parse_args()
     dataset_trained = args.dataset_trained
@@ -45,6 +46,7 @@ if __name__ == "__main__":
     step_size = args.step_size
     iteration = args.iteration
     setting = args.setting
+    num_workers = args.num_workers
     dataset_predict = args.dataset_predict
 
     if torch.cuda.is_available():
@@ -57,7 +59,8 @@ if __name__ == "__main__":
 
     field = '_'.join([basis_set, radius + 'sphere', grid_interval + 'grid/'])
     dataset_test = train.MyDataset(dir_predict + 'test_' + field)
-    dataloader_test = train.mydataloader(dataset_test, batch_size, False)
+    dataloader_test = train.mydataloader(dataset_test, batch_size=batch_size,
+                                         num_workers=num_workers)
 
     with open(dir_trained + 'orbitaldict_' + basis_set + '.pickle', 'rb') as f:
         orbital_dict = pickle.load(f)
@@ -72,12 +75,12 @@ if __name__ == "__main__":
                                      map_location=device))
     tester = train.Tester(model)
 
-    print('Start predicting for', dataset_predict, 'dataset\n'
-          'with the pretrained model with', dataset_trained, 'dataset.\n'
+    print('Start predicting for', dataset_predict, 'dataset.\n'
+          'using the pretrained model with', dataset_trained, 'dataset.\n'
           'The prediction result is saved in the output directory.\n'
           'Wait for a while...')
 
-    MAE, prediction = tester.test(dataloader_test)
+    MAE, prediction = tester.test(dataloader_test, time=True)
     filename = ('../output/prediction--' + dataset_predict +
                 '--' + setting + '.txt')
     tester.save_prediction(prediction, filename)

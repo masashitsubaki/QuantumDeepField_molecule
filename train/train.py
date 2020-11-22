@@ -52,7 +52,7 @@ class QuantumDeepField(nn.Module):
         with a pad_value (e.g., 0 and large value) for batch processing.
         For example, given a list of matrices [A, B, C],
         this function returns a new matrix [A00, 0B0, 00C],
-        where 0 is the zero matrix, that is, a block diagonal matrix.
+        where 0 is the zero matrix (i.e., a block diagonal matrix).
         """
         shapes = [m.shape for m in matrices]
         M, N = sum([s[0] for s in shapes]), sum([s[1] for s in shapes])
@@ -66,16 +66,18 @@ class QuantumDeepField(nn.Module):
             j += n
         return pad_matrices
 
-    def basis_matrix(self, atomic_orbitals, distance_matrix, quantum_numbers):
+    def basis_matrix(self, atomic_orbitals,
+                     distance_matrices, quantum_numbers):
         """Transform the distance matrix into a basis matrix,
         in which each element is d^(q-1)*e^(-z*d^2), where d is the distance,
-        q (=1,2,...) is the quantum number, and z is the orbital exponent.
-        Note that this is a simplified Gaussian-type orbital (GTO)
+        q is the principle quantum number, and z is the orbital exponent.
+        We note that this is a simplified Gaussian-type orbital (GTO)
         in terms of the spherical harmonics.
+        We simply normalize the GTO basis matrix using F.normalize in PyTorch.
         """
         zetas = torch.squeeze(self.zeta(atomic_orbitals))
-        GTOs = (distance_matrix**(quantum_numbers-1) *
-                torch.exp(-zetas*distance_matrix**2))
+        GTOs = (distance_matrices**(quantum_numbers-1) *
+                torch.exp(-zetas*distance_matrices**2))
         GTOs = F.normalize(GTOs, 2, 0)
         # print(torch.sum(torch.t(GTOs)[0]**2))  # Normalization check.
         return GTOs
@@ -103,11 +105,14 @@ class QuantumDeepField(nn.Module):
         atomic_orbitals = torch.cat(atomic_orbitals)
 
         """LCAO."""
-        basis_matrix = self.basis_matrix(atomic_orbitals, distance_matrices,
-                                         quantum_numbers)
+        basis_matrix = self.basis_matrix(atomic_orbitals,
+                                         distance_matrices, quantum_numbers)
         molecular_orbitals = torch.matmul(basis_matrix, coefficients)
 
-        """Normalize the molecular orbitals."""
+        """We simply normalize the molecular orbitals
+        and keep the total electrons of the molecule
+        in learning the molecular orbitals.
+        """
         split_MOs = torch.split(molecular_orbitals, N_fields)
         normalized_MOs = []
         for N_elec, MOs in zip(N_electrons, split_MOs):
@@ -117,7 +122,7 @@ class QuantumDeepField(nn.Module):
 
         return torch.cat(normalized_MOs)
 
-    def functional(self, vectors, layers, axis, operation):
+    def functional(self, vectors, layers, operation, axis):
         """DNN-based energy functional."""
         for l in range(layers):
             vectors = torch.relu(self.W_functional[l](vectors))
@@ -136,27 +141,27 @@ class QuantumDeepField(nn.Module):
 
     def forward(self, data, train=False, target=None, predict=False):
         """Forward computation of the QDF model
-        with the above defined functions.
+        using the above defined functions.
         """
 
         idx, inputs, N_fields = data[0], data[1:6], data[5]
 
-        if predict:  # See the demo directory.
+        if predict:
             with torch.no_grad():
                 molecular_orbitals = self.LCAO(inputs)
                 final_layer = self.functional(molecular_orbitals,
-                                              self.layer_functional, N_fields,
-                                              self.operation)
+                                              self.layer_functional,
+                                              self.operation, N_fields)
                 E_ = self.W_property(final_layer)
-                return idx, E_, final_layer
+                return idx, E_
 
         elif train:
             molecular_orbitals = self.LCAO(inputs)
             if target == 'E':  # Supervised learning for energy.
                 E = self.list_to_batch(data[6], cat=True, axis=0)  # Correct E.
                 final_layer = self.functional(molecular_orbitals,
-                                              self.layer_functional, N_fields,
-                                              self.operation)
+                                              self.layer_functional,
+                                              self.operation, N_fields)
                 E_ = self.W_property(final_layer)  # Predicted E.
                 loss = F.mse_loss(E, E_)
             if target == 'V':  # Unsupervised learning for potential.
@@ -166,15 +171,16 @@ class QuantumDeepField(nn.Module):
                 V_ = self.HKmap(densities, self.layer_HK)  # Predicted V.
                 loss = F.mse_loss(V, V_)
             return loss
+
         else:  # Test.
             with torch.no_grad():
                 E = self.list_to_batch(data[6], cat=True, axis=0)
                 molecular_orbitals = self.LCAO(inputs)
                 final_layer = self.functional(molecular_orbitals,
-                                              self.layer_functional, N_fields,
-                                              self.operation)
+                                              self.layer_functional,
+                                              self.operation, N_fields)
                 E_ = self.W_property(final_layer)
-                return idx, E, E_,
+                return idx, E, E_
 
 
 class Trainer(object):
@@ -207,18 +213,28 @@ class Tester(object):
     def __init__(self, model):
         self.model = model
 
-    def test(self, dataloader):
+    def test(self, dataloader, time=False):
         N = sum([len(data[0]) for data in dataloader])
         IDs, Es, Es_ = [], [], []
         SAE = 0  # Sum absolute error.
+        start = timeit.default_timer()
 
-        for data in dataloader:
+        for i, data in enumerate(dataloader):
             idx, E, E_ = self.model.forward(data)
             SAE_batch = torch.sum(torch.abs(E - E_), 0)
             SAE += SAE_batch
             IDs += list(idx)
             Es += E.tolist()
             Es_ += E_.tolist()
+
+            if (time is True and i == 0):
+                time = timeit.default_timer() - start
+                minutes = len(dataloader) * time / 60
+                hours = int(minutes / 60)
+                minutes = int(minutes - 60 * hours)
+                print('The prediction will finish in about',
+                      hours, 'hours', minutes, 'minutes.')
+
         MAE = (SAE/N).tolist()  # Mean absolute error.
         MAE = ','.join([str(m) for m in MAE])
 
@@ -257,11 +273,10 @@ class MyDataset(torch.utils.data.Dataset):
         return np.load(self.directory + self.files[idx], allow_pickle=True)
 
 
-def mydataloader(dataset, batch_size, shuffle=True, num_workers=4):
+def mydataloader(dataset, batch_size, num_workers, shuffle=False):
     dataloader = torch.utils.data.DataLoader(
-                 dataset, batch_size=batch_size, shuffle=shuffle,
-                 num_workers=num_workers, collate_fn=lambda xs: list(zip(*xs)),
-                 pin_memory=True)
+                 dataset, batch_size, shuffle=shuffle, num_workers=num_workers,
+                 collate_fn=lambda xs: list(zip(*xs)), pin_memory=True)
     return dataloader
 
 
@@ -284,9 +299,10 @@ if __name__ == "__main__":
     parser.add_argument('step_size', type=int)
     parser.add_argument('iteration', type=int)
     parser.add_argument('setting')
+    parser.add_argument('num_workers', type=int)
     args = parser.parse_args()
     dataset = args.dataset
-    unit = '(' + dataset.split('_')[-1] + ')'  # e.g., eV and eVatom^-1.
+    unit = '(' + dataset.split('_')[-1] + ')'
     basis_set = args.basis_set
     radius = args.radius
     grid_interval = args.grid_interval
@@ -301,6 +317,7 @@ if __name__ == "__main__":
     step_size = args.step_size
     iteration = args.iteration
     setting = args.setting
+    num_workers = args.num_workers
 
     """Fix the random seed (with the taxicab number)."""
     torch.manual_seed(1729)
@@ -320,9 +337,10 @@ if __name__ == "__main__":
     dataset_train = MyDataset(dir_dataset + 'train_' + field)
     dataset_val = MyDataset(dir_dataset + 'val_' + field)
     dataset_test = MyDataset(dir_dataset + 'test_' + field)
-    dataloader_train = mydataloader(dataset_train, batch_size)
-    dataloader_val = mydataloader(dataset_val, batch_size, False)
-    dataloader_test = mydataloader(dataset_test, batch_size, False)
+    dataloader_train = mydataloader(dataset_train, batch_size, num_workers,
+                                    shuffle=True)
+    dataloader_val = mydataloader(dataset_val, batch_size, num_workers)
+    dataloader_test = mydataloader(dataset_test, batch_size, num_workers)
     print('# of training samples: ', len(dataset_train))
     print('# of validation samples: ', len(dataset_val))
     print('# of test samples: ', len(dataset_test))
@@ -333,8 +351,8 @@ if __name__ == "__main__":
         orbital_dict = pickle.load(f)
     N_orbitals = len(orbital_dict)
 
-    """The output dimensionality in regression.
-    When we learn the atomization energy, N_output=1;
+    """The output dimension in regression.
+    When we learn only the atomization energy, N_output=1;
     when we learn the HOMO and LUMO simultaneously, N_output=2.
     """
     N_output = len(dataset_test[0][-2][0])
@@ -372,7 +390,7 @@ if __name__ == "__main__":
         time = timeit.default_timer() - start
 
         if epoch == 0:
-            minutes = time * iteration / 60
+            minutes = iteration * time / 60
             hours = int(minutes / 60)
             minutes = int(minutes - 60 * hours)
             print('The training will finish in about',

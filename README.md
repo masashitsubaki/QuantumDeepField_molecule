@@ -11,21 +11,26 @@
 This repository provides a simple implementation of the quantum deep field
 (QDF) framework for molecules proposed in our study as follows:
 
-[Masashi Tsubaki and Teruyasu Mizoguchi, Quantum deep field: Data-driven wave function, electron density generation, and energy prediction and extrapolation with machine learning, Physical Review Letters, 2020](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.206401);
+[Masashi Tsubaki and Teruyasu Mizoguchi, Quantum deep field: data-driven wave function, electron density generation, and energy prediction and extrapolation with machine learning, Physical Review Letters, 2020](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.206401);
 \
 [Masashi Tsubaki and Teruyasu Mizoguchi, On the equivalence of molecular graph convolution and molecular wave function with poor basis set, Advances in Neural Information Processing Systems, 2020](https://proceedings.neurips.cc/paper/2020/hash/1534b76d325a8f591b52d302e7181331-Abstract.html).
 
 QDF is a machine learning model that
 provides the electron density &rho; of molecules
-by learning the atomization energy E of molecules on a large dataset (e.g., the QM9 dataset).
+by learning the atomization energy E of molecules
+on a large dataset (e.g., the QM9 dataset [1]).
 The QDF model involves a linear component
 (i.e., the linear combination of atomic orbitals, LCAO [2])
-and two nonlinear components (i.e., the energy functional and the Hohenberg-Kohn map [3]),
-in which the latter two are implemented by deep neural network (DNN).
+and two nonlinear components
+(i.e., the energy functional and the Hohenberg-Kohn map [3]),
+in which the latter two are implemented by deep neural network (DNN)
+(see the above figure).
 In particular, the DNN-based Hohenberg-Kohn map serves as a physical,
 external potential constraint on &psi; (i.e., the Kohn-Sham molecular orbitals)
-in learning the energy functional E = F[&psi;] based on the density functional theory
-(see the above figure and read our papers for more details).
+in learning the energy functional E = F[&psi;] based on the density functional theory.
+For more details, read our paper of NeurIPS,
+which provides the equivalence/difference between LCAO and
+graph neural networks (GNNs) or graph convolutional networks (GCN) for molecules.
 
 In the following, we describe the detailed usage of this repository.
 
@@ -38,55 +43,65 @@ In the following, we describe the detailed usage of this repository.
 - You can predict the properties of new molecules using the pre-trained QDF models,
   which are already provided in this repository, by running only two commands.
 - You can train a QDF model with your dataset
-  and predict the property of your molecules using it.
+  and predict the property of your molecules using your pre-trained QDF model.
 
 
 
 ## Requirements
 
-- [PyTorch](https://pytorch.org/)
+- [PyTorch](https://pytorch.org/) (of course, numpy and scipy)
 - [Mayavi](https://docs.enthought.com/mayavi/mayavi/)
   (option to generate the electron density map)
+
+We recommend the use of a GPU for training the QDF model.
+Note that we confirm the error caused by num_workers
+with Python>=3.6 Pytorch 1.7 on MacOS CPU, which is reported in
+[this issue](https://github.com/pytorch/pytorch/issues/46409).
 
 
 
 ## Usage
 
 #### (1) Clone or download the script
+
 ```
 $ git clone https://github.com/masashitsubaki/QuantumDeepField_molecule.git
 $ cd QuantumDeepField_molecule
 $ ls
-dataset     train       output      predict
-pretrained_model        figure      README.md
+dataset     train       output      pretrained_model
+predict     demo        figure      README.md
 ```
 
-This repository provides various property datasets extracted from the QM9 dataset
+This repository provides various property datasets extracted from QM9
 in the dataset directory (for details, see the Datasets section).
+
 ```
 $ cd dataset
 $ ls
+QM9under7atoms_atomizationenergy_eV  # Very small dataset for trial.
 QM9under14atoms_atomizationenergy_eV
 QM9over15atoms_atomizationenergy_eV.zip  # Only test.txt.
 QM9full_atomizationenergy_eV.zip
 QM9full_homolumo_eV.zip
-yourdataset_property_unit  # Empty data.
+yourdataset_property_unit  # Empty.
 ```
-Please unzip these zip files beforehand.
+
+Please unzip the zip files beforehand.
 
 
 
 #### (2) Train a QDF model with the QM9 dataset
 
-With a dataset in the dataset directory,
-you can train a QDF model by running the two commands as follows.
+With a dataset in the dataset directory, you can train a QDF model
+by running the two commands as follows.
 
 ```
 $ cd train
 $ bash preprocess.sh
 $ bash train.sh
 ```
-These shell scripts (preprocess.sh and train.sh) and their explanations are as follows.
+
+These two shell scripts and their explanations are as follows.
 
 <div align='center'>
 <p><img src='figure/shell_train.jpeg' width='1000'/></p>
@@ -101,25 +116,30 @@ After running each command, your terminal is displayed as follows.
 
 After training a QDF model,
 we can describe the learning curve from the result file as follows.
+
 <div align='center'>
 <p><img src='figure/learning.jpeg' width='500'/></p>
 </div>
+
 Using the above hyperparameters, you can completely reproduce this result.
+The result file for describing this learning curve is saved in the output directory.
 
 
 
-#### (3) Predict a property of molecules with the pre-trained QDF model
+#### (3) Predict a property of molecules using the pre-trained QDF model
 
 Actually, we have already trained some QDF models
 and provide them in the pretrained_model directory.
-Using a pre-trained QDF model,
-you can predict the property of new molecules by the two commands as follows.
+Using a pre-trained QDF model, you can predict the property of new molecules
+by running the two commands as follows.
+
 ```
 $ cd predict
 $ bash preprocess.sh
 $ bash predict.sh
 ```
-These shell scripts (i.e., preprocess.sh and predict.sh) and their explanations are as follows.
+
+These two shell scripts and their explanations are as follows.
 
 <div align='center'>
 <p><img src='figure/shell_predict.jpeg' width='1000'/></p>
@@ -132,6 +152,20 @@ and the result file is saved in the output directory (right) as follows.
 <div align='center'>
 <p><img src='figure/terminal_predict.jpeg' width='1000'/></p>
 </div>
+
+If you predict the QM9over15atoms dataset
+using the pre-trained model with the QM9under14atoms dataset,
+you can reproduce the extrapolation prediction result as follows.
+
+<div align='center'>
+<img src='figure/extrapolation.jpeg' width='1000'/></p>
+</div>
+
+We obtained the mean absolute error (MAE) less than 3.0 kcal/mol on the QM9over15atoms dataset.
+Note that since we varied the hyperparameters after publishing,
+the above MAEs on interpolation and extrapolation are different from that of our original papers.
+This is the result of an attempt to both reduce the learning parameters
+and improve the extrapolation accuracy; this will be updated in the future.
 
 
 
@@ -171,7 +205,7 @@ when the training dataset format is prepared as the same as the above QM9full_ho
 ## Train a QDF model with your dataset
 
 If you prepare your dataset using the same format as the above QM9 dataset,
-you can train a QDF model with your dataset and others (e.g., the Alchemy [4])
+you can train a QDF model with your dataset and others.
 by running the two shell scripts (i.e., preprocess.sh and train.sh).
 In the dataset directory, we divide the dataset into
 the training, validation, and test sets;
@@ -200,15 +234,24 @@ that do not appear in the QM9 dataset, you receive the following warning.
 
 If you would like to predict the molecules including S and Cl atoms,
 train a QDF model with the Alchemy dataset [4].
+However, the current implementation only considers the basis set
+(e.g., 3-21G and 6-31G) for H, C, N, O and F atoms in the QM9 dataset.
+For S, Cl, and other heavier atoms in the Alchemy dataset,
+you will need to add a script to consider the basis set
+for such heavy atoms in preprocess.py as follows.
+
+<div align='center'>
+<p><img src='figure/basis_set.jpeg' width='500'/></p>
+</div>
 
 
 
 ## Extension
 
-As we have discussed in our papers, for example we need to improve
-the current (a) simplified Gaussian-type orbitals
-in terms of the spherical harmonics (e.g., use the Slater-type orbitals),
-(b) Gaussian external potential [3]
+As we have discussed in our papers, for example we need to improve the current
+(a) simplified Gaussian-type orbitals in terms of the spherical harmonics
+(e.g., use the Slater-type orbitals),
+(b) Gaussian external potential [3] that is a simplified potential
 (e.g., to better describe the potential and density close to the nucleus),
 and (c) vanilla feed-forward DNNs (e.g., add the residual connections).
 Such model extensions can be created by forking this repository.

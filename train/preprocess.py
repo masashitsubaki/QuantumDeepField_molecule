@@ -7,7 +7,7 @@ import pickle
 
 import numpy as np
 
-from scipy import spatial, special
+from scipy import spatial
 
 
 """Dictionary of atomic numbers."""
@@ -52,10 +52,10 @@ def create_distancematrix(coords1, coords2):
     """Create the distance matrix from coords1 and coords2,
     where coords = [[x_1, y_1, z_1], [x_2, y_2, z_2], ...].
     For example, when coords1 is field_coords and coords2 is atomic_coords
-    of a molecule, each element of the matrix is the distance value
+    of a molecule, each element of the matrix is the distance
     between a field point and an atomic position in the molecule.
     Note that we transform all 0 elements in the distance matrix
-    into a large value (e.g., 1e6) because we use the Gaussian-type orbital:
+    into a large value (e.g., 1e6) because we use the Gaussian:
     exp(-d^2), where d is the distance, and exp(-1e6^2) becomes 0.
     """
     distance_matrix = spatial.distance_matrix(coords1, coords2)
@@ -74,8 +74,12 @@ def create_dataset(dir_dataset, filename, basis_set,
                    radius, grid_interval, orbital_dict, property=True):
 
     """Directory of a preprocessed dataset."""
-    dir_preprocess = (dir_dataset + filename + '_' + basis_set + '_' +
-                      str(radius) + 'sphere_' + str(grid_interval) + 'grid/')
+    if property:
+        dir_preprocess = (dir_dataset + filename + '_' + basis_set + '_' +
+                          str(radius) + 'sphere_' +
+                          str(grid_interval) + 'grid/')
+    else:
+        dir_preprocess = filename + '/'
     os.makedirs(dir_preprocess, exist_ok=True)
 
     """Basis set."""
@@ -88,7 +92,6 @@ def create_dataset(dir_dataset, filename, basis_set,
     """Load a dataset."""
     with open(dir_dataset + filename + '.txt', 'r') as f:
         dataset = f.read().strip().split('\n\n')
-    # dataset = dataset[:1000]
 
     N = len(dataset)
     percent = 10
@@ -99,16 +102,19 @@ def create_dataset(dir_dataset, filename, basis_set,
             print(str(percent) + '％ has finished.')
             percent += 40
 
-        """Index of a molecular data and
-        its physical property value to be learned.
-        """
+        """Index of the molecular data."""
         data = data.strip().split('\n')
         idx = data[0]
 
-        """Multiple properties can also be processed."""
+        """Multiple properties (e.g., homo and lumo) can also be processed
+        at a time (i.e., the model output has two dimensions).
+        """
         if property:
+            atom_xyzs = data[1:-1]
             property_values = data[-1].strip().split()
             property_values = np.array([[float(p) for p in property_values]])
+        else:
+            atom_xyzs = data[1:]
 
         atoms = []
         atomic_numbers = []
@@ -117,11 +123,6 @@ def create_dataset(dir_dataset, filename, basis_set,
         atomic_orbitals = []
         orbital_coords = []
         quantum_numbers = []
-
-        if property:
-            atom_xyzs = data[1:-1]
-        else:
-            atom_xyzs = data[1:]
 
         """Load the 3D molecular structure data."""
         for atom_xyz in atom_xyzs:
@@ -157,25 +158,19 @@ def create_dataset(dir_dataset, filename, basis_set,
         distance_matrix = create_distancematrix(field_coords, orbital_coords)
         quantum_numbers = np.array([quantum_numbers])
         N_electrons = np.array([[N_electrons]])
-        N_field = len(field_coords)  # The number of grid points in the field.
+        N_field = len(field_coords)  # The number of points in the grid field.
 
         """Save the above set of data."""
+        data = [idx,
+                atomic_orbitals.astype(np.int64),
+                distance_matrix.astype(np.float32),
+                quantum_numbers.astype(np.float32),
+                N_electrons.astype(np.float32),
+                N_field]
+
         if property:
-            data = [idx,
-                    atomic_orbitals.astype(np.int64),
-                    distance_matrix.astype(np.float32),
-                    quantum_numbers.astype(np.float32),
-                    N_electrons.astype(np.float32),
-                    N_field,
-                    property_values.astype(np.float32),
-                    potential.astype(np.float32)]
-        else:
-            data = [idx,
-                    atomic_orbitals.astype(np.int64),
-                    distance_matrix.astype(np.float32),
-                    quantum_numbers.astype(np.float32),
-                    N_electrons.astype(np.float32),
-                    N_field]
+            data += [property_values.astype(np.float32),
+                     potential.astype(np.float32)]
 
         data = np.array(data, dtype=object)
         np.save(dir_preprocess + idx, data)
@@ -206,7 +201,7 @@ if __name__ == "__main__":
     print('Preprocess', dataset, 'dataset.\n'
           'The preprocessed dataset is saved in', dir_dataset, 'directory.\n'
           'If the dataset size is large, '
-          'it will take a long time and consume storage.\n'
+          'it takes a long time and consume storage.\n'
           'Wait for a while...')
     print('-'*50)
 

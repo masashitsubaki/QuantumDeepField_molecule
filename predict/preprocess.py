@@ -3,7 +3,6 @@
 import argparse
 from collections import defaultdict
 import glob
-import os
 import pickle
 import shutil
 import sys
@@ -46,16 +45,15 @@ if __name__ == "__main__":
     print('Preprocess', dataset_predict, 'dataset.\n'
           'The preprocessed dataset is saved in', dir_predict, 'directory.\n'
           'If the dataset size is large, '
-          'it will take a long time and consume storage.\n'
+          'it takes a long time and consume storage.\n'
           'Wait for a while...')
     print('-'*50)
 
     pp.create_dataset(dir_predict, 'test',
                       basis_set, radius, grid_interval, orbital_dict)
-
     if N_orbitals < len(orbital_dict):
         print('##################### Warning!!!!!! #####################\n'
-              'The dataset_predict contains unknown atoms\n'
+              'The prediction dataset contains unknown atoms\n'
               'that did not appear in the training dataset.\n'
               'The parameters for these atoms have not been learned yet\n'
               'and must be randomly initialized at this time.\n'
@@ -64,4 +62,5 @@ if __name__ == "__main__":
               '#########################################################')
         shutil.rmtree(glob.glob(dir_predict + 'test_*')[0])
     else:
+        print('-'*50)
         print('The preprocess has finished.')
