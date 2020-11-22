@@ -28,9 +28,8 @@ in which the latter two are implemented by deep neural network (DNN)
 In particular, the DNN-based Hohenberg-Kohn map serves as a physical,
 external potential constraint on &psi; (i.e., the Kohn-Sham molecular orbitals)
 in learning the energy functional E = F[&psi;] based on the density functional theory.
-For more details, read our paper of NeurIPS,
-which provides the equivalence/difference between LCAO and
-graph neural networks (GNNs) or graph convolutional networks (GCN) for molecules.
+For more details, read our papers, in which the NeurIPS paper provides the equivalence and difference
+between LCAO and graph neural networks (GNNs) or graph convolutional networks (GCNs) for molecules.
 
 In the following, we describe the detailed usage of this repository.
 
