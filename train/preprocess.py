@@ -78,7 +78,7 @@ def create_dataset(dir_dataset, filename, basis_set,
         dir_preprocess = (dir_dataset + filename + '_' + basis_set + '_' +
                           str(radius) + 'sphere_' +
                           str(grid_interval) + 'grid/')
-    else:
+    else:  # For demo.
         dir_preprocess = filename + '/'
     os.makedirs(dir_preprocess, exist_ok=True)
 

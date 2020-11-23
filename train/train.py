@@ -146,7 +146,7 @@ class QuantumDeepField(nn.Module):
 
         idx, inputs, N_fields = data[0], data[1:6], data[5]
 
-        if predict:
+        if predict:  # For demo.
             with torch.no_grad():
                 molecular_orbitals = self.LCAO(inputs)
                 final_layer = self.functional(molecular_orbitals,
@@ -236,7 +236,7 @@ class Tester(object):
                       hours, 'hours', minutes, 'minutes.')
 
         MAE = (SAE/N).tolist()  # Mean absolute error.
-        MAE = ','.join([str(m) for m in MAE])
+        MAE = ','.join([str(m) for m in MAE])  # For homo and lumo.
 
         prediction = 'ID\tCorrect\tPredict\tError\n'
         for idx, E, E_ in zip(IDs, Es, Es_):
@@ -244,7 +244,7 @@ class Tester(object):
             error = ','.join([str(e) for e in error])
             E = ','.join([str(e) for e in E])
             E_ = ','.join([str(e) for e in E_])
-            prediction += '\t'.join(map(str, [idx, E, E_, error])) + '\n'
+            prediction += '\t'.join([idx, E, E_, error]) + '\n'
 
         return MAE, prediction
 
@@ -376,12 +376,13 @@ if __name__ == "__main__":
     file_prediction = '../output/prediction--' + setting + '.txt'
     file_model = '../output/model--' + setting
 
-    start = timeit.default_timer()
     print('Start training of the QDF model with', dataset, 'dataset.\n'
           'The training result is displayed in this terminal every epoch.\n'
           'The result, prediction, and trained model '
           'are saved in the output directory.\n'
           'Wait for a while...')
+
+    start = timeit.default_timer()
 
     for epoch in range(iteration):
         loss_E, loss_V = trainer.train(dataloader_train)

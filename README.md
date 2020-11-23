@@ -28,8 +28,9 @@ in which the latter two are implemented by deep neural network (DNN)
 In particular, the DNN-based Hohenberg-Kohn map serves as a physical,
 external potential constraint on &psi; (i.e., the Kohn-Sham molecular orbitals)
 in learning the energy functional E = F[&psi;] based on the density functional theory.
-For more details, read our papers, in which the NeurIPS paper provides the equivalence and difference
-between LCAO and graph neural networks (GNNs) or graph convolutional networks (GCNs) for molecules.
+For more details read our papers, in which the NeurIPS paper provides
+the equivalence and difference between LCAO and graph neural networks
+or graph convolutional networks for molecules.
 
 In the following, we describe the detailed usage of this repository.
 
@@ -53,9 +54,9 @@ In the following, we describe the detailed usage of this repository.
   (option to generate the electron density map)
 
 We recommend the use of a GPU for training the QDF model.
-Note that we confirm the error caused by num_workers
-with Python>=3.6 Pytorch 1.7 on MacOS CPU, which is reported in
-[this issue](https://github.com/pytorch/pytorch/issues/46409).
+Note that we confirm the error caused by num_workers>0
+with Python>=3.6 Pytorch 1.7 on MacOS CPU,
+which is reported as [this issue](https://github.com/pytorch/pytorch/issues/46409).
 
 
 
@@ -67,11 +68,11 @@ with Python>=3.6 Pytorch 1.7 on MacOS CPU, which is reported in
 $ git clone https://github.com/masashitsubaki/QuantumDeepField_molecule.git
 $ cd QuantumDeepField_molecule
 $ ls
-dataset     train       output      pretrained_model
-predict     demo        figure      README.md
+dataset     train       output          pretrained_model
+predict     demo        README.md       figure
 ```
 
-This repository provides various property datasets extracted from QM9
+This repository provides some property datasets extracted from QM9
 in the dataset directory (for details, see the Datasets section).
 
 ```
@@ -81,6 +82,7 @@ QM9under7atoms_atomizationenergy_eV  # Very small dataset for trial.
 QM9under14atoms_atomizationenergy_eV
 QM9over15atoms_atomizationenergy_eV.zip  # Only test.txt.
 QM9full_atomizationenergy_eV.zip
+QM9under7atoms_homolumo_eV  # Trial dataset for homo lumo (i.e., multiple properties).
 QM9full_homolumo_eV.zip
 yourdataset_property_unit  # Empty.
 ```
@@ -113,15 +115,15 @@ After running each command, your terminal is displayed as follows.
 <p><img src='figure/terminal_train.jpeg' width='1000'/></p>
 </div>
 
-After training a QDF model,
-we can describe the learning curve from the result file as follows.
+After training the QDF model,
+the result file is saved in the output directory (left)
+and we can describe the learning curve from the file as follows.
 
 <div align='center'>
-<p><img src='figure/learning.jpeg' width='500'/></p>
+<p><img src='figure/learning.jpeg' width='1000'/></p>
 </div>
 
 Using the above hyperparameters, you can completely reproduce this result.
-The result file for describing this learning curve is saved in the output directory.
 
 
 
@@ -145,7 +147,7 @@ These two shell scripts and their explanations are as follows.
 </div>
 
 You can vary the pre-trained QDF model and predict various properties.
-After running the two commands, your terminal is displayed (left)
+After running each command, your terminal is displayed (left)
 and the result file is saved in the output directory (right) as follows.
 
 <div align='center'>
@@ -163,8 +165,9 @@ you can reproduce the extrapolation prediction result as follows.
 We obtained the mean absolute error (MAE) less than 3.0 kcal/mol on the QM9over15atoms dataset.
 Note that since we varied the hyperparameters after publishing,
 the above MAEs on interpolation and extrapolation are different from that of our original papers.
-This is the result of an attempt to both reduce the learning parameters
-and improve the extrapolation accuracy; this will be updated in the future.
+This is the result of an attempt to reduce the learning parameters
+and improve the extrapolation performance; this will be updated in the future.
+The above extrapolation result is also saved in the output directory.
 
 
 
@@ -195,8 +198,8 @@ The final format of the preprocessed QM9 dataset is as follows.
 <p><img src='figure/dataset.jpeg' width='1000'/></p>
 </div>
 
-Note that our QDF model can learn multiple properties
-``simultaneously'' (i.e., the model output has multiple dimensions)
+Note that our QDF model can learn multiple properties simultaneously
+(i.e., the model output has multiple dimensions)
 when the training dataset format is prepared as the same as the above QM9full_homolumo_eV.
 
 
@@ -204,12 +207,12 @@ when the training dataset format is prepared as the same as the above QM9full_ho
 ## Train a QDF model with your dataset
 
 If you prepare your dataset using the same format as the above QM9 dataset,
-you can train a QDF model with your dataset and others.
+you can train a QDF model with your dataset and others
 by running the two shell scripts (i.e., preprocess.sh and train.sh).
 In the dataset directory, we divide the dataset into
-the training, validation, and test sets;
-therefore, if you prepare the training set with the publicly available data
-and train it, you can predict your (e.g., in-house) data as the test set.
+the training, validation, and test sets; therefore,
+if you prepare the training set with the publicly available data and train it,
+you can predict your (e.g., in-house) data as the test set.
 
 
 
@@ -233,7 +236,7 @@ that do not appear in the QM9 dataset, you receive the following warning.
 
 If you would like to predict the molecules including S and Cl atoms,
 train a QDF model with the Alchemy dataset [4].
-However, the current implementation only considers the basis set
+However, the current implementation only considers the standard basis set
 (e.g., 3-21G and 6-31G) for H, C, N, O and F atoms in the QM9 dataset.
 For S, Cl, and other heavier atoms in the Alchemy dataset,
 you will need to add a script to consider the basis set
@@ -275,6 +278,7 @@ the electron density map of molecules by a command in the future.
 ## Demo (work in progress)
 
 We are now preparing an online demo
+(we provide the script in the demo directory)
 for predicting the molecular properties using the pre-trained QDF models.
 
 
