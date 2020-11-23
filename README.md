@@ -117,7 +117,7 @@ After running each command, your terminal is displayed as follows.
 
 After training the QDF model,
 the result file is saved in the output directory (left)
-and we can describe the learning curve from the file as follows.
+and we can describe the learning curve (right) from the file as follows.
 
 <div align='center'>
 <p><img src='figure/learning.jpeg' width='1000'/></p>
