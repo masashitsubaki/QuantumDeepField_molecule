@@ -1,19 +1,23 @@
 # Quantum deep field for molecule
 
-## Overview
-
 <div align='center'>
-<p><img src='figure/overview.jpeg' width='1000'/></p>
+<p><img src='figure/logo.jpeg' width='1000'/></p>
 </div>
 
-
+## Overview
 
 This repository provides a simple implementation of the quantum deep field
-(QDF) framework for molecules proposed in our study as follows:
+(QDF) framework for molecules proposed in our study as follows.
 
-[Masashi Tsubaki and Teruyasu Mizoguchi, Quantum deep field: data-driven wave function, electron density generation, and energy prediction and extrapolation with machine learning, Physical Review Letters, 2020](https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.206401);
-\
-[Masashi Tsubaki and Teruyasu Mizoguchi, On the equivalence of molecular graph convolution and molecular wave function with poor basis set, Advances in Neural Information Processing Systems, 2020](https://proceedings.neurips.cc/paper/2020/hash/1534b76d325a8f591b52d302e7181331-Abstract.html).
+> Masashi Tsubaki and Teruyasu Mizoguchi  
+> **Quantum deep field: data-driven wave function, electron density generation, and energy prediction and extrapolation with machine learning**  
+> Physical Review Letters, 2020  
+> https://journals.aps.org/prl/abstract/10.1103/PhysRevLett.125.206401  
+
+> Masashi Tsubaki and Teruyasu Mizoguchi  
+> **On the equivalence of molecular graph convolution and molecular wave function with poor basis set**  
+> Advances in Neural Information Processing Systems, 2020  
+> https://proceedings.neurips.cc/paper/2020/hash/1534b76d325a8f591b52d302e7181331-Abstract.html
 
 QDF is a machine learning model that
 provides the electron density &rho; of molecules
@@ -31,6 +35,10 @@ in learning the energy functional E = F[&psi;] based on the density functional t
 For more details read our papers, in which the NeurIPS paper provides
 the equivalence and difference between LCAO and graph neural networks
 or graph convolutional networks for molecules.
+
+<div align='center'>
+<p><img src='figure/overview.jpeg' width='1000'/></p>
+</div>
 
 In the following, we describe the detailed usage of this repository.
 
